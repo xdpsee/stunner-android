@@ -3,16 +3,16 @@ package com.cherry.stunner.model.domain;
 import lombok.Data;
 
 @Data
-public class Tag {
+public class Album {
 
     private Long id;
 
     private String title;
 
-    private String imageUrl;
+    private String coverUrl;
 
-    private int imageWidth;
+    private int coverWidth;
 
-    private int imageHeight;
+    private int coverHeight;
+
 }
-

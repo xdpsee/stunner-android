@@ -1,15 +1,23 @@
 package com.cherry.stunner.view;
 
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.StringDef;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
+import android.util.DisplayMetrics;
 import android.view.MenuItem;
 
 import com.cherry.stunner.R;
 import com.cherry.stunner.adapter.PortalFragmentPagerAdapter;
+import com.cherry.stunner.event.ScreenSizeChangeEvent;
 import com.cherry.stunner.view.utils.BottomNavigationViewHelper;
+
+import org.greenrobot.eventbus.EventBus;
+
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity implements ViewPager.OnPageChangeListener, BottomNavigationView.OnNavigationItemSelectedListener {
 
@@ -77,5 +85,31 @@ public class MainActivity extends AppCompatActivity implements ViewPager.OnPageC
         }
 
         return false;
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+
+        if(newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE){
+            DisplayMetrics dm = new DisplayMetrics();
+            getWindowManager().getDefaultDisplay().getMetrics(dm);
+            int width = dm.widthPixels;
+            int height = dm.heightPixels;
+
+            System.out.println(String.format(Locale.CHINA,"横屏: %d, %d", width, height));
+
+            EventBus.getDefault().post(new ScreenSizeChangeEvent(newConfig.orientation, width, height));
+
+        } else {
+            DisplayMetrics dm = new DisplayMetrics();
+            getWindowManager().getDefaultDisplay().getMetrics(dm);
+            int width = dm.widthPixels;
+            int height = dm.heightPixels;
+
+            System.out.println(String.format(Locale.CHINA,"竖屏: %d, %d", width, height));
+            EventBus.getDefault().post(new ScreenSizeChangeEvent(newConfig.orientation, width, height));
+        }
+
     }
 }

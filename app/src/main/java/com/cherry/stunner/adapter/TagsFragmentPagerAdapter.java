@@ -4,7 +4,8 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 
 import com.cherry.stunner.model.domain.Category;
-import com.cherry.stunner.view.fragment.TagsFragment;
+import com.cherry.stunner.view.fragment.ImageTagsFragment;
+import com.cherry.stunner.view.fragment.portal.ContainerFragment;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,9 +35,13 @@ public class TagsFragmentPagerAdapter extends android.support.v4.app.FragmentSta
         }
 
         Category category = categories.get(position);
-        TagsFragment fragment = TagsFragment.newInstance(category.getId());
-
+        ImageTagsFragment fragment = ImageTagsFragment.newInstance(category.getId());
         return fragment;
+    }
+
+    @Override
+    public int getItemPosition(Object object) {
+        return POSITION_NONE;
     }
 
     @Override
