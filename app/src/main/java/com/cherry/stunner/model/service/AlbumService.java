@@ -1,9 +1,7 @@
 package com.cherry.stunner.model.service;
 
-import com.cherry.stunner.model.domain.Album;
+import com.cherry.stunner.model.domain.AlbumList;
 import com.cherry.stunner.model.domain.ResponseData;
-
-import java.util.List;
 
 import lombok.Data;
 import retrofit2.Call;
@@ -24,7 +22,7 @@ public interface AlbumService {
     }
 
     @GET("/stunner/api/tag/{tagId}/albums")
-    Call<ResponseData<List<Album>>> listAlbums(@Path("tagId") long tagId
-            , @Query("params") ListAlbumsQueryParams queryParams);
+    Call<ResponseData<AlbumList>> listAlbums(@Path("tagId") long tagId
+            , @Query(value = "params", encoded = true) String queryParams);
 
 }

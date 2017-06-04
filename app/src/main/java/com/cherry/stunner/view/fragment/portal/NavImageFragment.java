@@ -15,10 +15,11 @@ import com.cherry.stunner.adapter.TagsFragmentPagerAdapter;
 import com.cherry.stunner.contract.ImagePortalContract;
 import com.cherry.stunner.model.domain.Category;
 import com.cherry.stunner.presenter.ImagePortalPresenter;
+import com.cherry.stunner.view.fragment.BaseFragment;
 
 import java.util.List;
 
-public class NavImageFragment extends Fragment implements ImagePortalContract.View {
+public class NavImageFragment extends BaseFragment implements ImagePortalContract.View {
 
     private ViewPager viewPager;
 

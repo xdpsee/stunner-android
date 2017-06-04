@@ -59,7 +59,7 @@ public class ImageAlbumsAdapter extends RecyclerView.Adapter<ImageAlbumsAdapter.
 
         holder.textView.setText(album.getTitle());
 
-        final float width = screenWidth / 2.0f;
+        final float width = screenWidth / 3.0f;
         holder.itemView.getLayoutParams().height = (int) width * album.getCoverHeight() / album.getCoverWidth();
 
         Picasso.with(holder.itemView.getContext())

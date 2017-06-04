@@ -1,11 +1,12 @@
 package com.cherry.stunner.view.fragment;
 
+import android.content.Context;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
+import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,7 +26,7 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.List;
 
-public class AlbumsFragment extends Fragment implements ImageAlbumsContract.View {
+public class AlbumsFragment extends BaseFragment implements ImageAlbumsContract.View {
 
     public static final String ARG_TAG_ID = "ARG_TAG_ID";
 
@@ -35,10 +36,10 @@ public class AlbumsFragment extends Fragment implements ImageAlbumsContract.View
 
     private ImageAlbumsPresenter presenter;
 
-    public static ImageTagsFragment newInstance(long tagId) {
+    public static AlbumsFragment newInstance(long tagId) {
         Bundle args = new Bundle();
         args.putLong(ARG_TAG_ID, tagId);
-        ImageTagsFragment fragment = new ImageTagsFragment();
+        AlbumsFragment fragment = new AlbumsFragment();
         fragment.setArguments(args);
         return fragment;
     }
@@ -63,8 +64,19 @@ public class AlbumsFragment extends Fragment implements ImageAlbumsContract.View
             , @Nullable Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.albums_list, null);
 
+        Toolbar toolbar = (Toolbar) view.findViewById(R.id.toolbar);
+        toolbar.setTitle("专辑");
+        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+            }
+        });
+
+        toolbar.setNavigationIcon(R.drawable.ic_chevron_left_black_24dp);
+
         RecyclerView recyclerView = (RecyclerView)view.findViewById(R.id.albums_recycler_view);
-        recyclerView.setLayoutManager(new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL));
+        recyclerView.setLayoutManager(new StaggeredGridLayoutManager(3, StaggeredGridLayoutManager.VERTICAL));
         recyclerView.setAdapter(imageAlbumsAdapter);
 
         EventBus.getDefault().register(this);
@@ -93,6 +105,9 @@ public class AlbumsFragment extends Fragment implements ImageAlbumsContract.View
 
     @Override
     public void albumsLoadError(Throwable throwable) {
-        Toast.makeText(getContext(), "Oops!载入数据失败", Toast.LENGTH_LONG).show();
+        Context context = getActivity();
+        if (context != null) {
+            Toast.makeText(getActivity(), "Oops!载入数据失败", Toast.LENGTH_LONG).show();
+        }
     }
 }

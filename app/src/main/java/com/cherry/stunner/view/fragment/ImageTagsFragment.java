@@ -1,15 +1,12 @@
 package com.cherry.stunner.view.fragment;
 
+import android.content.Context;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
@@ -19,7 +16,6 @@ import com.cherry.stunner.adapter.ImageTagsAdapter;
 import com.cherry.stunner.contract.ImageTagsContract;
 import com.cherry.stunner.event.ScreenSizeChangeEvent;
 import com.cherry.stunner.model.domain.Tag;
-import com.cherry.stunner.model.service.TagsService;
 import com.cherry.stunner.presenter.ImageTagsPresenter;
 import com.cherry.stunner.view.event.OnRecyclerViewItemClickListener;
 import com.cherry.stunner.view.utils.ScreenSize;
@@ -31,7 +27,7 @@ import org.greenrobot.eventbus.ThreadMode;
 import java.util.List;
 
 
-public class ImageTagsFragment extends Fragment implements ImageTagsContract.View {
+public class ImageTagsFragment extends BaseFragment implements ImageTagsContract.View {
 
     public static final String ARG_CATEGORY_ID = "ARG_CATEGORY_ID";
 
@@ -76,7 +72,7 @@ public class ImageTagsFragment extends Fragment implements ImageTagsContract.Vie
             public void onItemClick(RecyclerView.ViewHolder viewHolder) {
                 int position = viewHolder.getLayoutPosition();
                 Tag tag = imageTagsAdapter.getItem(position);
-
+                pushFragment(AlbumsFragment.newInstance(tag.getId()));
             }
         });
 
@@ -108,7 +104,12 @@ public class ImageTagsFragment extends Fragment implements ImageTagsContract.Vie
 
     @Override
     public void tagsLoadError(Throwable throwable) {
-        Toast.makeText(getContext(), "Oops!载入数据失败", Toast.LENGTH_LONG).show();
+        Context context = getActivity();
+        if (context != null) {
+            Toast.makeText(getActivity(), "Oops!载入数据失败", Toast.LENGTH_LONG).show();
+        }
 
     }
+
+
 }

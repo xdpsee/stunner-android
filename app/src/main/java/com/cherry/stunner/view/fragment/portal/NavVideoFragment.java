@@ -8,8 +8,9 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.cherry.stunner.R;
+import com.cherry.stunner.view.fragment.BaseFragment;
 
-public class NavVideoFragment extends Fragment {
+public class NavVideoFragment extends BaseFragment {
 
     public static NavVideoFragment newInstance() {
         Bundle args = new Bundle();

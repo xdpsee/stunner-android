@@ -10,7 +10,6 @@ public class JSONUtils {
     private static final Gson gson;
     static {
         gson = new GsonBuilder()
-                .setPrettyPrinting()
                 .serializeNulls()
                 .create();
     }

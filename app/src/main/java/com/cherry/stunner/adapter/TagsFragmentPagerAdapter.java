@@ -5,7 +5,6 @@ import android.support.v4.app.FragmentManager;
 
 import com.cherry.stunner.model.domain.Category;
 import com.cherry.stunner.view.fragment.ImageTagsFragment;
-import com.cherry.stunner.view.fragment.portal.ContainerFragment;
 
 import java.util.ArrayList;
 import java.util.List;

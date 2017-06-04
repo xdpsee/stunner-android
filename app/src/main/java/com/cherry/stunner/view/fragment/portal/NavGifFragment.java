@@ -8,8 +8,9 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.cherry.stunner.R;
+import com.cherry.stunner.view.fragment.BaseFragment;
 
-public class NavGifFragment extends Fragment {
+public class NavGifFragment extends BaseFragment {
 
     public static NavGifFragment newInstance() {
         Bundle args = new Bundle();
