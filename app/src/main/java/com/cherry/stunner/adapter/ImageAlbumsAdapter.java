@@ -38,6 +38,10 @@ public class ImageAlbumsAdapter extends RecyclerView.Adapter<ImageAlbumsAdapter.
         notifyDataSetChanged();
     }
 
+    public Album getItem(int position) {
+        return imageAlbums.get(position);
+    }
+
     @Override
     public ImageAlbumViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())

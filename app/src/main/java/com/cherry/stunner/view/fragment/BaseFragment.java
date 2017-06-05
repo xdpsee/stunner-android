@@ -6,7 +6,10 @@ import android.support.v4.app.Fragment;
 public class BaseFragment extends Fragment {
 
     public interface FragmentNavigation {
+
         void pushFragment(Fragment fragment);
+
+        void popFragment();
     }
 
     private FragmentNavigation mFragmentNavigation;
@@ -25,6 +28,14 @@ public class BaseFragment extends Fragment {
         }
 
         mFragmentNavigation.pushFragment(fragment);
+    }
+
+    public void popFragment() {
+        if (null == mFragmentNavigation) {
+            throw new IllegalStateException("The fragment's Activity should implements BaseFragment.FragmentNavigation interface!");
+        }
+
+        mFragmentNavigation.popFragment();
     }
 
 }

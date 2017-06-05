@@ -18,6 +18,7 @@ import com.cherry.stunner.contract.ImageAlbumsContract;
 import com.cherry.stunner.event.ScreenSizeChangeEvent;
 import com.cherry.stunner.model.domain.Album;
 import com.cherry.stunner.presenter.ImageAlbumsPresenter;
+import com.cherry.stunner.view.event.OnRecyclerViewItemClickListener;
 import com.cherry.stunner.view.utils.ScreenSize;
 
 import org.greenrobot.eventbus.EventBus;
@@ -26,7 +27,7 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.List;
 
-public class AlbumsFragment extends BaseFragment implements ImageAlbumsContract.View {
+public class ImageAlbumsFragment extends BaseFragment implements ImageAlbumsContract.View {
 
     public static final String ARG_TAG_ID = "ARG_TAG_ID";
 
@@ -36,10 +37,10 @@ public class AlbumsFragment extends BaseFragment implements ImageAlbumsContract.
 
     private ImageAlbumsPresenter presenter;
 
-    public static AlbumsFragment newInstance(long tagId) {
+    public static ImageAlbumsFragment newInstance(long tagId) {
         Bundle args = new Bundle();
         args.putLong(ARG_TAG_ID, tagId);
-        AlbumsFragment fragment = new AlbumsFragment();
+        ImageAlbumsFragment fragment = new ImageAlbumsFragment();
         fragment.setArguments(args);
         return fragment;
     }
@@ -65,19 +66,26 @@ public class AlbumsFragment extends BaseFragment implements ImageAlbumsContract.
         final View view = inflater.inflate(R.layout.albums_list, null);
 
         Toolbar toolbar = (Toolbar) view.findViewById(R.id.toolbar);
+        toolbar.setNavigationIcon(R.drawable.ic_chevron_left_black_24dp);
         toolbar.setTitle("专辑");
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                popFragment();
             }
         });
-
-        toolbar.setNavigationIcon(R.drawable.ic_chevron_left_black_24dp);
 
         RecyclerView recyclerView = (RecyclerView)view.findViewById(R.id.albums_recycler_view);
         recyclerView.setLayoutManager(new StaggeredGridLayoutManager(3, StaggeredGridLayoutManager.VERTICAL));
         recyclerView.setAdapter(imageAlbumsAdapter);
+        recyclerView.addOnItemTouchListener(new OnRecyclerViewItemClickListener(recyclerView) {
+            @Override
+            public void onItemClick(RecyclerView.ViewHolder viewHolder) {
+                int position = viewHolder.getLayoutPosition();
+                Album album = imageAlbumsAdapter.getItem(position);
+
+            }
+        });
 
         EventBus.getDefault().register(this);
 

@@ -65,7 +65,6 @@ public class ImageTagsAdapter extends RecyclerView.Adapter<ImageTagsAdapter.Imag
 
         final float width = screenWidth / 2.0f;
         holder.itemView.getLayoutParams().height = (int) width * tag.getImageHeight() / tag.getImageWidth();
-        holder.itemView.setBackgroundResource(R.drawable.touch_bg);
 
         Picasso.with(holder.itemView.getContext())
                 .load("http://test.png.png")

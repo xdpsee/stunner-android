@@ -18,6 +18,7 @@ import com.cherry.stunner.view.fragment.portal.NavMyFragment;
 import com.cherry.stunner.view.fragment.portal.NavVideoFragment;
 import com.cherry.stunner.view.utils.BottomNavigationViewHelper;
 import com.ncapdevi.fragnav.FragNavController;
+import com.ncapdevi.fragnav.FragNavTransactionOptions;
 
 import org.greenrobot.eventbus.EventBus;
 
@@ -44,13 +45,30 @@ public class MainActivity extends AppCompatActivity implements BaseFragment.Frag
         mNavController = FragNavController.newBuilder(savedInstanceState, getSupportFragmentManager(), R.id.fragment_container)
                 .transactionListener(this)
                 .rootFragmentListener(this, 4)
+                .defaultTransactionOptions(FragNavTransactionOptions.newBuilder()
+                        .customAnimations(R.anim.slide_in_from_left
+                                , R.anim.slide_out_to_right)
+                        .build())
                 .build();
     }
 
     @Override
     public void pushFragment(Fragment fragment) {
         if (mNavController != null) {
-            mNavController.pushFragment(fragment);
+            mNavController.pushFragment(fragment, FragNavTransactionOptions.newBuilder()
+                    .customAnimations(R.anim.slide_in_from_right
+                            , R.anim.slide_out_to_left)
+                    .build());
+        }
+    }
+
+    @Override
+    public void popFragment() {
+        if (mNavController != null) {
+            mNavController.popFragment(FragNavTransactionOptions.newBuilder()
+                    .customAnimations(R.anim.slide_in_from_left
+                            , R.anim.slide_out_to_right)
+                    .build());
         }
     }
 

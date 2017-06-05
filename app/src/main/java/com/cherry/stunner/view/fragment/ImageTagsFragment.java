@@ -72,7 +72,7 @@ public class ImageTagsFragment extends BaseFragment implements ImageTagsContract
             public void onItemClick(RecyclerView.ViewHolder viewHolder) {
                 int position = viewHolder.getLayoutPosition();
                 Tag tag = imageTagsAdapter.getItem(position);
-                pushFragment(AlbumsFragment.newInstance(tag.getId()));
+                pushFragment(ImageAlbumsFragment.newInstance(tag.getId()));
             }
         });
 
