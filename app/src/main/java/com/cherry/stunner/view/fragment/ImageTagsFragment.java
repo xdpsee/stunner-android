@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.view.LayoutInflater;
@@ -65,7 +66,7 @@ public class ImageTagsFragment extends BaseFragment implements ImageTagsContract
         final View view = inflater.inflate(R.layout.tags_list, null);
 
         RecyclerView recyclerView = (RecyclerView)view.findViewById(R.id.tags_recycler_view);
-        recyclerView.setLayoutManager(new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL));
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         recyclerView.setAdapter(imageTagsAdapter);
         recyclerView.addOnItemTouchListener(new OnRecyclerViewItemClickListener(recyclerView) {
             @Override
