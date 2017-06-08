@@ -31,16 +31,21 @@ import java.util.List;
 public class ImageTagsFragment extends BaseFragment implements ImageTagsContract.View {
 
     public static final String ARG_CATEGORY_ID = "ARG_CATEGORY_ID";
+    public static final String ARG_TITLE = "ARG_TITLE";
+
 
     private long categoryId;
+
+    private String title;
 
     private ImageTagsPresenter presenter;
 
     private ImageTagsAdapter imageTagsAdapter;
 
-    public static ImageTagsFragment newInstance(long categoryId) {
+    public static ImageTagsFragment newInstance(long categoryId, String title) {
         Bundle args = new Bundle();
         args.putLong(ARG_CATEGORY_ID, categoryId);
+        args.putString(ARG_TITLE, title);
         ImageTagsFragment fragment = new ImageTagsFragment();
         fragment.setArguments(args);
         return fragment;
@@ -50,7 +55,7 @@ public class ImageTagsFragment extends BaseFragment implements ImageTagsContract
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         categoryId = getArguments().getLong(ARG_CATEGORY_ID);
-
+        title = getArguments().getString(ARG_TITLE);
         presenter = new ImageTagsPresenter(categoryId);
         presenter.attachView(this);
 
@@ -73,7 +78,7 @@ public class ImageTagsFragment extends BaseFragment implements ImageTagsContract
             public void onItemClick(RecyclerView.ViewHolder viewHolder) {
                 int position = viewHolder.getLayoutPosition();
                 Tag tag = imageTagsAdapter.getItem(position);
-                pushFragment(ImageAlbumsFragment.newInstance(tag.getId()));
+                pushFragment(ImageAlbumsFragment.newInstance(tag.getId(), tag.getTitle()));
             }
         });
 

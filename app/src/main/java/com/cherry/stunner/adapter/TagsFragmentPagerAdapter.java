@@ -34,7 +34,7 @@ public class TagsFragmentPagerAdapter extends android.support.v4.app.FragmentSta
         }
 
         Category category = categories.get(position);
-        ImageTagsFragment fragment = ImageTagsFragment.newInstance(category.getId());
+        ImageTagsFragment fragment = ImageTagsFragment.newInstance(category.getId(), category.getTitle());
         return fragment;
     }
 

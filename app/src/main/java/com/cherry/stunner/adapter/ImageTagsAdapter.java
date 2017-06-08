@@ -1,5 +1,7 @@
 package com.cherry.stunner.adapter;
 
+import android.graphics.PointF;
+import android.net.Uri;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.view.LayoutInflater;
@@ -9,11 +11,17 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.cherry.stunner.R;
 import com.cherry.stunner.contract.ImagePortalContract;
 import com.cherry.stunner.model.domain.Album;
 import com.cherry.stunner.model.domain.Tag;
+import com.facebook.drawee.backends.pipeline.Fresco;
+import com.facebook.drawee.interfaces.DraweeController;
+import com.facebook.drawee.view.SimpleDraweeView;
+import com.facebook.imagepipeline.request.ImageRequest;
+import com.facebook.imagepipeline.request.ImageRequestBuilder;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
@@ -56,7 +64,7 @@ public class ImageTagsAdapter extends RecyclerView.Adapter<ImageTagsAdapter.Imag
     }
 
     @Override
-    public void onBindViewHolder(ImageTagViewHolder holder, int position) {
+    public void onBindViewHolder(final ImageTagViewHolder holder, int position) {
 
         Tag tag = imageTags.get(position);
         if (tag.getImageWidth() <= 0) {
@@ -67,6 +75,12 @@ public class ImageTagsAdapter extends RecyclerView.Adapter<ImageTagsAdapter.Imag
         }
 
         holder.textView.setText(tag.getTitle());
+        holder.overflowImageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(holder.itemView.getContext(), "haha", Toast.LENGTH_LONG).show();
+            }
+        });
         holder.resetPreviewAlbums(tag.getAlbums());
     }
 
@@ -79,6 +93,8 @@ public class ImageTagsAdapter extends RecyclerView.Adapter<ImageTagsAdapter.Imag
 
         private TextView textView;
 
+        private ImageView overflowImageView;
+
         private RecyclerView previewRecyclerView;
 
         private PreviewAlbumAdapter previewAlbumAdapter = new PreviewAlbumAdapter();
@@ -86,6 +102,7 @@ public class ImageTagsAdapter extends RecyclerView.Adapter<ImageTagsAdapter.Imag
         ImageTagViewHolder(View itemView) {
             super(itemView);
             textView = (TextView) itemView.findViewById(R.id.tags_cell_text_view);
+            overflowImageView = (ImageView) itemView.findViewById(R.id.tags_cell_text_overlay_image_view);
             previewRecyclerView = (RecyclerView) itemView.findViewById(R.id.tags_cell_preview_recycler_view);
             previewRecyclerView.setLayoutManager(new StaggeredGridLayoutManager(3, StaggeredGridLayoutManager.VERTICAL));
             previewRecyclerView.setAdapter(previewAlbumAdapter);
@@ -120,13 +137,23 @@ public class ImageTagsAdapter extends RecyclerView.Adapter<ImageTagsAdapter.Imag
             }
 
             int width = screenWidth / 3;
-            holder.itemView.getLayoutParams().height = width * album.getCoverHeight() / album.getCoverWidth();
+            holder.itemView.getLayoutParams().height = width;//width * album.getCoverHeight() / album.getCoverWidth();
 
-            Picasso.with(holder.itemView.getContext())
-                    .load(album.getCoverUrl() != null ? album.getCoverUrl() : "http://png.test.png")
-                    .placeholder(R.drawable.ic_image_loading)
-                    .error(android.R.drawable.ic_menu_report_image)
-                    .into(holder.mPreviewImageView);
+            Uri uri = Uri.parse(album.getCoverUrl());
+            ImageRequest request = ImageRequestBuilder.newBuilderWithSource(uri)
+                    .setProgressiveRenderingEnabled(true)
+                    .build();
+            DraweeController controller = Fresco.newDraweeControllerBuilder()
+                    .setUri(uri)
+                    .setImageRequest(request)
+                    .setTapToRetryEnabled(true)
+                    .setOldController(holder.mPreviewImageView.getController())
+                    .build();
+            holder.mPreviewImageView.getHierarchy().setActualImageFocusPoint(new PointF(0.5f, 0.35f));
+            holder.mPreviewImageView.setController(controller);
+
+
+
         }
 
         @Override
@@ -143,12 +170,12 @@ public class ImageTagsAdapter extends RecyclerView.Adapter<ImageTagsAdapter.Imag
 
         class PreviewAlbumImageViewHolder extends RecyclerView.ViewHolder {
 
-            private ImageView mPreviewImageView;
+            private SimpleDraweeView mPreviewImageView;
 
             PreviewAlbumImageViewHolder(View itemView) {
                 super(itemView);
 
-                mPreviewImageView = (ImageView) itemView.findViewById(R.id.tags_cell_preview_cell_image_view);
+                mPreviewImageView = (SimpleDraweeView) itemView.findViewById(R.id.tags_cell_preview_cell_image_view);
             }
         }
     }

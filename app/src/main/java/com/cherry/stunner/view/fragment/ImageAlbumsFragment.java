@@ -30,16 +30,20 @@ import java.util.List;
 public class ImageAlbumsFragment extends BaseFragment implements ImageAlbumsContract.View {
 
     public static final String ARG_TAG_ID = "ARG_TAG_ID";
+    public static final String ARG_TITLE = "ARG_TITLE";
+
 
     private long tagId;
+    private String title;
 
     private ImageAlbumsAdapter imageAlbumsAdapter;
 
     private ImageAlbumsPresenter presenter;
 
-    public static ImageAlbumsFragment newInstance(long tagId) {
+    public static ImageAlbumsFragment newInstance(long tagId, String title) {
         Bundle args = new Bundle();
         args.putLong(ARG_TAG_ID, tagId);
+        args.putString(ARG_TITLE, title);
         ImageAlbumsFragment fragment = new ImageAlbumsFragment();
         fragment.setArguments(args);
         return fragment;
@@ -49,6 +53,7 @@ public class ImageAlbumsFragment extends BaseFragment implements ImageAlbumsCont
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         tagId = getArguments().getLong(ARG_TAG_ID);
+        title = getArguments().getString(ARG_TITLE);
 
         Point size = ScreenSize.get(getContext());
 
@@ -67,7 +72,7 @@ public class ImageAlbumsFragment extends BaseFragment implements ImageAlbumsCont
 
         Toolbar toolbar = (Toolbar) view.findViewById(R.id.toolbar);
         toolbar.setNavigationIcon(R.drawable.ic_chevron_left_black_24dp);
-        toolbar.setTitle("专辑");
+        toolbar.setTitle(title);
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

@@ -5,7 +5,9 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginTop="1px"
-    app:cardCornerRadius="1dp">
+    android:foreground="?android:selectableItemBackground"
+    android:elevation="1dp">
+    app:cardCornerRadius="1dp"
 
     <RelativeLayout
         android:layout_width="match_parent"
