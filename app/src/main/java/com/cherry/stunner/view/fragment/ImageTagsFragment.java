@@ -57,10 +57,18 @@ public class ImageTagsFragment extends BaseFragment implements ImageTagsContract
         categoryId = getArguments().getLong(ARG_CATEGORY_ID);
         title = getArguments().getString(ARG_TITLE);
         presenter = new ImageTagsPresenter(categoryId);
-        presenter.attachView(this);
+        presenter.attachView(getContext(), this);
 
         Point size = ScreenSize.get(getContext());
         imageTagsAdapter = new ImageTagsAdapter(presenter.listImageTags(), size.x);
+    }
+
+    @Override
+    public void onDestroy() {
+
+        presenter.onDetachView(this);
+
+        super.onDestroy();
     }
 
     @Nullable
@@ -105,7 +113,9 @@ public class ImageTagsFragment extends BaseFragment implements ImageTagsContract
 
     @Override
     public void tagsDataChanged(List<Tag> imageTags) {
-        imageTagsAdapter.reset(imageTags);
+        if (null != imageTags) {
+            imageTagsAdapter.reset(imageTags);
+        }
     }
 
     @Override

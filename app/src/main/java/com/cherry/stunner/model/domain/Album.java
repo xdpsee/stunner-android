@@ -1,9 +1,11 @@
 package com.cherry.stunner.model.domain;
 
+import java.io.Serializable;
+
 import lombok.Data;
 
 @Data
-public class Album {
+public class Album implements Serializable {
 
     private Long id;
 

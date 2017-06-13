@@ -1,12 +1,13 @@
 package com.cherry.stunner.model.domain;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 import lombok.Data;
 
 @Data
-public class Tag {
+public class Tag implements Serializable {
 
     private Long id;
 
@@ -21,7 +22,7 @@ public class Tag {
     private List<AlbumBrief> albums = new ArrayList<>();
 
     @Data
-    public static class AlbumBrief {
+    public static class AlbumBrief implements Serializable {
 
         private Long id;
 
@@ -34,4 +35,5 @@ public class Tag {
         private int coverHeight;
     }
 }
+
 
