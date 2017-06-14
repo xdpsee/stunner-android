@@ -13,9 +13,15 @@ public interface ImageAlbumsContract {
 
         void rendererAlbums(List<Album> albums, boolean append);
 
-        void finishRefreshing();
+        void finishPullToRefreshing();
 
         void showAlbumsLoadError(Throwable throwable);
+
+        void showLoadMoreStart();
+
+        void showLoadMoreFinish();
+
+        void showLoadMoreError(Throwable e);
     }
 
     interface Presenter {
@@ -26,7 +32,9 @@ public interface ImageAlbumsContract {
 
         List<Album> loadLocalAlbums();
 
-        void loadRemoteAlbums(boolean reset);
+        void loadRemoteAlbums();
+
+        void loadRemoteMoreAlbums();
 
     }
 

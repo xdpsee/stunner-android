@@ -33,13 +33,15 @@ public class ImageAlbumsAdapter extends RecyclerView.Adapter<ImageAlbumsAdapter.
     }
 
     public void append(List<Album> albums){
+
+        int lastIndex = imageAlbums.size();
         imageAlbums.addAll(albums);
-        notifyDataSetChanged();
+
+        notifyItemRangeInserted(lastIndex, albums.size());
     }
 
     public void relayout(int screenWidth) {
         this.screenWidth = screenWidth;
-
         notifyDataSetChanged();
     }
 

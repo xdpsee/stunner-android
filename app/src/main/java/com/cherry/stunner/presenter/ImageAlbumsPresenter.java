@@ -61,9 +61,9 @@ public class ImageAlbumsPresenter implements ImageAlbumsContract.Presenter {
     }
 
     @Override
-    public void loadRemoteAlbums(boolean reset) {
+    public void loadRemoteAlbums() {
 
-        mAlbumService.listAlbums(mTagId, mNextTimeOffset, LIMIT)
+        mAlbumService.listAlbums(mTagId, null, LIMIT)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Subscriber<ResponseData<AlbumList>>() {
@@ -71,7 +71,7 @@ public class ImageAlbumsPresenter implements ImageAlbumsContract.Presenter {
                     public void onCompleted() {
                         ImageAlbumsContract.View view = getView();
                         if (view != null) {
-                            view.finishRefreshing();
+                            view.finishPullToRefreshing();
                         }
                     }
 
@@ -79,7 +79,7 @@ public class ImageAlbumsPresenter implements ImageAlbumsContract.Presenter {
                     public void onError(Throwable e) {
                         ImageAlbumsContract.View view = getView();
                         if (view != null) {
-                            view.finishRefreshing();
+                            view.finishPullToRefreshing();
                             view.showAlbumsLoadError(e);
                         }
                     }
@@ -92,12 +92,55 @@ public class ImageAlbumsPresenter implements ImageAlbumsContract.Presenter {
                             List<Album> albums = albumList.getAlbums();
                             if (albums.size() > 0) {
                                 mNextTimeOffset = albumList.getNextTimeOffset();
-                                view.rendererAlbums(albumList.getAlbums(), !reset);
+                                view.rendererAlbums(albumList.getAlbums(), false);
                             }
                         }
                     }
                 });
 
+    }
+
+    @Override
+    public void loadRemoteMoreAlbums() {
+
+        ImageAlbumsContract.View view = getView();
+        if (view != null) {
+            view.showLoadMoreStart();
+        }
+
+        mAlbumService.listAlbums(mTagId, mNextTimeOffset, LIMIT)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Subscriber<ResponseData<AlbumList>>() {
+                    @Override
+                    public void onCompleted() {
+                        ImageAlbumsContract.View view = getView();
+                        if (view != null) {
+                            view.showLoadMoreFinish();
+                        }
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        ImageAlbumsContract.View view = getView();
+                        if (view != null) {
+                            view.showLoadMoreError(e);
+                        }
+                    }
+
+                    @Override
+                    public void onNext(ResponseData<AlbumList> responseData) {
+                        ImageAlbumsContract.View view = getView();
+                        if (view != null) {
+                            AlbumList albumList = responseData.getData();
+                            List<Album> albums = albumList.getAlbums();
+                            if (albums.size() > 0) {
+                                mNextTimeOffset = albumList.getNextTimeOffset();
+                                view.rendererAlbums(albumList.getAlbums(), true);
+                            }
+                        }
+                    }
+                });
     }
 
     private ImageAlbumsContract.View getView() {
