@@ -9,16 +9,16 @@ import com.cherry.stunner.model.cache.CacheManager;
 import com.cherry.stunner.model.domain.ResponseData;
 import com.cherry.stunner.model.domain.Tag;
 import com.cherry.stunner.model.service.TagsService;
-import com.jakewharton.disklrucache.DiskLruCache;
 
-import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
+import rx.Subscriber;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
 
 public class ImageTagsPresenter implements ImageTagsContract.Presenter {
 
@@ -30,14 +30,18 @@ public class ImageTagsPresenter implements ImageTagsContract.Presenter {
 
     private Cache<ArrayList<Tag>> mCache;
 
+    private ExecutorService executor;
+
     public ImageTagsPresenter(long mCategoryId) {
         this.mCategoryId = mCategoryId;
+        this.executor = Executors.newCachedThreadPool();
     }
 
     @Override
     public void attachView(Context context, ImageTagsContract.View view) {
         this.mViewRef = new WeakReference<>(view);
         mCache = CacheManager.getCache(context, ImageTagsPresenter.class.getSimpleName());
+        mTagsService = RetrofitManager.INSTANCE.getService(TagsService.class);
     }
 
     @Override
@@ -45,38 +49,54 @@ public class ImageTagsPresenter implements ImageTagsContract.Presenter {
         this.mViewRef.clear();
     }
 
-    public List<Tag> listImageTags() {
-
+    @Override
+    public List<Tag> loadLocalTags() {
         List<Tag> tags = mCache.get(String.valueOf(mCategoryId));
         if (tags != null && tags.size() > 0) {
             return tags;
         }
 
-        mTagsService = RetrofitManager.INSTANCE.getService(TagsService.class);
-        Call<ResponseData<ArrayList<Tag>>> call = mTagsService.listTags(mCategoryId);
-        call.enqueue(new Callback<ResponseData<ArrayList<Tag>>>() {
-            @Override
-            public void onResponse(Call<ResponseData<ArrayList<Tag>>> call, Response<ResponseData<ArrayList<Tag>>> response) {
-                final ImageTagsContract.View view = mViewRef != null ? mViewRef.get() : null;
-                if (view != null && response.isSuccessful()) {
-                    ArrayList<Tag> tags = response.body().getData();
-                    if (null != tags && tags.size() > 0) {
-                        mCache.put(String.valueOf(mCategoryId), tags);
-                        view.tagsDataChanged(tags);
-                    }
-                }
-            }
-
-            @Override
-            public void onFailure(Call<ResponseData<ArrayList<Tag>>> call, Throwable throwable) {
-                final ImageTagsContract.View view = mViewRef != null ? mViewRef.get() : null;
-                if (view != null) {
-                    view.tagsLoadError(throwable);
-                }
-            }
-        });
-
         return new ArrayList<>();
     }
 
+    @Override
+    public void loadRemoteTags() {
+        mTagsService.listTags(mCategoryId)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Subscriber<ResponseData<ArrayList<Tag>>>() {
+                    @Override
+                    public void onCompleted() {
+                        ImageTagsContract.View view = getView();
+                        if (view != null) {
+                            view.finishRefreshing();
+                        }
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        ImageTagsContract.View view = getView();
+                        if (view != null) {
+                            view.finishRefreshing();
+                            view.showTagsLoadError(e);
+                        }
+                    }
+
+                    @Override
+                    public void onNext(ResponseData<ArrayList<Tag>> responseData) {
+                        ImageTagsContract.View view = getView();
+                        if (view != null) {
+                            final ArrayList<Tag> tags = responseData.getData();
+                            view.rendererTags(tags);
+                            executor.submit(() -> mCache.put(String.valueOf(mCategoryId), tags));
+                        }
+                    }
+                });
+    }
+
+    private ImageTagsContract.View getView() {
+        return mViewRef != null ? mViewRef.get() : null;
+    }
 }
+
+

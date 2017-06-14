@@ -1,68 +1,107 @@
 package com.cherry.stunner.presenter;
 
+import android.content.Context;
+
 import com.cherry.stunner.contract.ImageAlbumsContract;
 import com.cherry.stunner.model.RetrofitManager;
+import com.cherry.stunner.model.cache.Cache;
+import com.cherry.stunner.model.cache.CacheManager;
 import com.cherry.stunner.model.domain.Album;
 import com.cherry.stunner.model.domain.AlbumList;
 import com.cherry.stunner.model.domain.ResponseData;
 import com.cherry.stunner.model.service.AlbumService;
-import com.cherry.stunner.view.utils.JSONUtils;
 
 import java.lang.ref.WeakReference;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
+import rx.Subscriber;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
 
 public class ImageAlbumsPresenter implements ImageAlbumsContract.Presenter {
 
-    private long tagId;
+    private long mTagId;
 
-    private WeakReference<ImageAlbumsContract.View> viewRef;
+    private WeakReference<ImageAlbumsContract.View> mViewRef;
 
-    private AlbumService albumService;
+    private AlbumService mAlbumService;
 
-    public ImageAlbumsPresenter(long tagId) {
-        this.tagId = tagId;
+    private Cache<ArrayList<Album>> mCache;
+
+    private Long mNextTimeOffset;
+
+    private static final int LIMIT = 20;
+
+    public ImageAlbumsPresenter(long mTagId) {
+        this.mTagId = mTagId;
     }
 
-    public void attachView(ImageAlbumsContract.View view) {
-        this.viewRef = new WeakReference<>(view);
+    @Override
+    public void attachView(Context context, ImageAlbumsContract.View view) {
+        this.mViewRef = new WeakReference<>(view);
+        mCache = CacheManager.getCache(context, ImageAlbumsPresenter.class.getSimpleName());
+        mAlbumService = RetrofitManager.INSTANCE.getService(AlbumService.class);
     }
 
-    public List<Album> listAlbums() {
+    @Override
+    public void detachView() {
+        mViewRef.clear();
+    }
 
-        albumService = RetrofitManager.INSTANCE.getService(AlbumService.class);
-        AlbumService.ListAlbumsQueryParams params = new AlbumService.ListAlbumsQueryParams();
-        params.setLimit(40);
-        try {
-            String query = JSONUtils.toJSONString(params);
-            Call<ResponseData<AlbumList>> call = albumService.listAlbums(tagId, URLEncoder.encode(query, "UTF-8"));
-            call.enqueue(new Callback<ResponseData<AlbumList>>() {
-                @Override
-                public void onResponse(Call<ResponseData<AlbumList>> call, Response<ResponseData<AlbumList>> response) {
-                    final ImageAlbumsContract.View view = viewRef != null ? viewRef.get() : null;
-                    if (view != null && response.isSuccessful()) {
-                        view.albumsDataChanged(response.body().getData().getAlbums());
-                    }
-                }
+    @Override
+    public List<Album> loadLocalAlbums() {
 
-                @Override
-                public void onFailure(Call<ResponseData<AlbumList>> call, Throwable throwable) {
-                    final ImageAlbumsContract.View view = viewRef != null ? viewRef.get() : null;
-                    if (view != null) {
-                        view.albumsLoadError(throwable);
-                    }
-                }
-            });
-        } catch (Exception e) {
-            e.printStackTrace();
+        ArrayList<Album> albums = mCache.get(String.valueOf(mTagId));
+        if (null != albums && albums.size() > 0) {
+            return albums;
         }
 
         return new ArrayList<>();
+    }
+
+    @Override
+    public void loadRemoteAlbums(boolean reset) {
+
+        mAlbumService.listAlbums(mTagId, mNextTimeOffset, LIMIT)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Subscriber<ResponseData<AlbumList>>() {
+                    @Override
+                    public void onCompleted() {
+                        ImageAlbumsContract.View view = getView();
+                        if (view != null) {
+                            view.finishRefreshing();
+                        }
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        ImageAlbumsContract.View view = getView();
+                        if (view != null) {
+                            view.finishRefreshing();
+                            view.showAlbumsLoadError(e);
+                        }
+                    }
+
+                    @Override
+                    public void onNext(ResponseData<AlbumList> responseData) {
+                        ImageAlbumsContract.View view = getView();
+                        if (view != null) {
+                            AlbumList albumList = responseData.getData();
+                            List<Album> albums = albumList.getAlbums();
+                            if (albums.size() > 0) {
+                                mNextTimeOffset = albumList.getNextTimeOffset();
+                                view.rendererAlbums(albumList.getAlbums(), !reset);
+                            }
+                        }
+                    }
+                });
+
+    }
+
+    private ImageAlbumsContract.View getView() {
+        return mViewRef != null ? mViewRef.get() : null;
     }
 
 }

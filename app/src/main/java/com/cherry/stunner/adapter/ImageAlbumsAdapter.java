@@ -32,6 +32,11 @@ public class ImageAlbumsAdapter extends RecyclerView.Adapter<ImageAlbumsAdapter.
         notifyDataSetChanged();
     }
 
+    public void append(List<Album> albums){
+        imageAlbums.addAll(albums);
+        notifyDataSetChanged();
+    }
+
     public void relayout(int screenWidth) {
         this.screenWidth = screenWidth;
 

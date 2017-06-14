@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.support.v7.widget.Toolbar;
@@ -26,19 +27,25 @@ import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-public class ImageAlbumsFragment extends BaseFragment implements ImageAlbumsContract.View {
+public class ImageAlbumsFragment extends BaseFragment implements ImageAlbumsContract.View, SwipeRefreshLayout.OnRefreshListener {
 
     public static final String ARG_TAG_ID = "ARG_TAG_ID";
     public static final String ARG_TITLE = "ARG_TITLE";
 
 
-    private long tagId;
-    private String title;
+    private long mTagId;
 
-    private ImageAlbumsAdapter imageAlbumsAdapter;
+    private String mTitle;
 
-    private ImageAlbumsPresenter presenter;
+    private ImageAlbumsAdapter mImageAlbumsAdapter;
+
+    private ImageAlbumsPresenter mPresenter;
+
+    private SwipeRefreshLayout mSwipeRefreshLayout;
+
+    private AtomicBoolean mLoading  = new AtomicBoolean(false);
 
     public static ImageAlbumsFragment newInstance(long tagId, String title) {
         Bundle args = new Bundle();
@@ -52,15 +59,27 @@ public class ImageAlbumsFragment extends BaseFragment implements ImageAlbumsCont
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        tagId = getArguments().getLong(ARG_TAG_ID);
-        title = getArguments().getString(ARG_TITLE);
+        mTagId = getArguments().getLong(ARG_TAG_ID);
+        mTitle = getArguments().getString(ARG_TITLE);
 
         Point size = ScreenSize.get(getContext());
 
-        presenter = new ImageAlbumsPresenter(tagId);
-        presenter.attachView(this);
+        mPresenter = new ImageAlbumsPresenter(mTagId);
+        mPresenter.attachView(getContext(), this);
 
-        imageAlbumsAdapter = new ImageAlbumsAdapter(presenter.listAlbums(), size.x);
+        List<Album> albums = mPresenter.loadLocalAlbums();
+        mImageAlbumsAdapter = new ImageAlbumsAdapter(albums, size.x);
+        if (albums.isEmpty()) {
+            mPresenter.loadRemoteAlbums(true);
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+
+        mPresenter.detachView();
+
+        super.onDestroy();
     }
 
     @Nullable
@@ -72,23 +91,21 @@ public class ImageAlbumsFragment extends BaseFragment implements ImageAlbumsCont
 
         Toolbar toolbar = (Toolbar) view.findViewById(R.id.toolbar);
         toolbar.setNavigationIcon(R.drawable.ic_chevron_left_black_24dp);
-        toolbar.setTitle(title);
-        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                popFragment();
-            }
-        });
+        toolbar.setTitle(mTitle);
+        toolbar.setNavigationOnClickListener(v -> popFragment());
+
+        mSwipeRefreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.albums_list_swipe_refresh_layout);
+        mSwipeRefreshLayout.setColorSchemeResources(R.color.colorGray, R.color.colorAccent, R.color.colorGreen);
+        mSwipeRefreshLayout.setOnRefreshListener(this);
 
         RecyclerView recyclerView = (RecyclerView)view.findViewById(R.id.albums_recycler_view);
         recyclerView.setLayoutManager(new StaggeredGridLayoutManager(3, StaggeredGridLayoutManager.VERTICAL));
-        recyclerView.setAdapter(imageAlbumsAdapter);
+        recyclerView.setAdapter(mImageAlbumsAdapter);
         recyclerView.addOnItemTouchListener(new OnRecyclerViewItemClickListener(recyclerView) {
             @Override
             public void onItemClick(RecyclerView.ViewHolder viewHolder) {
                 int position = viewHolder.getLayoutPosition();
-                Album album = imageAlbumsAdapter.getItem(position);
-
+                Album album = mImageAlbumsAdapter.getItem(position);
             }
         });
 
@@ -108,19 +125,42 @@ public class ImageAlbumsFragment extends BaseFragment implements ImageAlbumsCont
     @SuppressWarnings("unused")
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void screenSizeChanged(ScreenSizeChangeEvent event) {
-        imageAlbumsAdapter.relayout(event.getWidth());
+        mImageAlbumsAdapter.relayout(event.getWidth());
     }
 
     @Override
-    public void albumsDataChanged(List<Album> albums) {
-        imageAlbumsAdapter.reset(albums);
+    public void onRefresh() {
+        if (!mLoading.get()) {
+            mLoading.set(true);
+            mPresenter.loadRemoteAlbums(true);
+        }
     }
 
     @Override
-    public void albumsLoadError(Throwable throwable) {
+    public void rendererAlbums(List<Album> albums, boolean append) {
+        if (albums != null) {
+            if (!append) {
+                mImageAlbumsAdapter.reset(albums);
+            } else {
+                mImageAlbumsAdapter.append(albums);
+            }
+        }
+    }
+
+    @Override
+    public void finishRefreshing() {
+        mLoading.set(false);
+        mSwipeRefreshLayout.setRefreshing(false);
+    }
+
+    @Override
+    public void showAlbumsLoadError(Throwable throwable) {
         Context context = getActivity();
         if (context != null) {
             Toast.makeText(getActivity(), "Oops!载入数据失败", Toast.LENGTH_LONG).show();
         }
     }
+
 }
+
+

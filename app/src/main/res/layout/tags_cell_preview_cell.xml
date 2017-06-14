@@ -11,10 +11,10 @@
         android:layout_height="match_parent"
         android:layout_margin="2dp"
         fresco:actualImageScaleType="focusCrop"
-        fresco:failureImage="@color/colorAccent"
+        fresco:failureImage="@android:drawable/ic_menu_report_image"
         fresco:failureImageScaleType="centerInside"
         fresco:placeholderImage="@drawable/ic_image_loading"
         fresco:placeholderImageScaleType="centerInside"
-        fresco:retryImage="@drawable/ic_error_outline_black_24dp"
+        fresco:retryImage="@android:drawable/ic_menu_report_image"
         fresco:retryImageScaleType="centerInside" />
 </LinearLayout>

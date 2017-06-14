@@ -4,9 +4,9 @@ import android.content.Context;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,21 +26,23 @@ import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 
-public class ImageTagsFragment extends BaseFragment implements ImageTagsContract.View {
+public class ImageTagsFragment extends BaseFragment implements ImageTagsContract.View, SwipeRefreshLayout.OnRefreshListener {
 
     public static final String ARG_CATEGORY_ID = "ARG_CATEGORY_ID";
     public static final String ARG_TITLE = "ARG_TITLE";
 
+    private long mCategoryId;
 
-    private long categoryId;
+    private ImageTagsPresenter mPresenter;
 
-    private String title;
+    private ImageTagsAdapter mImageTagsAdapter;
 
-    private ImageTagsPresenter presenter;
+    private SwipeRefreshLayout mSwipeRefreshLayout;
 
-    private ImageTagsAdapter imageTagsAdapter;
+    private AtomicBoolean mLoading = new AtomicBoolean(false);
 
     public static ImageTagsFragment newInstance(long categoryId, String title) {
         Bundle args = new Bundle();
@@ -54,19 +56,22 @@ public class ImageTagsFragment extends BaseFragment implements ImageTagsContract
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        categoryId = getArguments().getLong(ARG_CATEGORY_ID);
-        title = getArguments().getString(ARG_TITLE);
-        presenter = new ImageTagsPresenter(categoryId);
-        presenter.attachView(getContext(), this);
+        mCategoryId = getArguments().getLong(ARG_CATEGORY_ID);
+        mPresenter = new ImageTagsPresenter(mCategoryId);
+        mPresenter.attachView(getContext(), this);
 
         Point size = ScreenSize.get(getContext());
-        imageTagsAdapter = new ImageTagsAdapter(presenter.listImageTags(), size.x);
+        List<Tag> tags = mPresenter.loadLocalTags();
+        mImageTagsAdapter = new ImageTagsAdapter(tags, size.x);
+        if (tags.isEmpty()) {
+            mPresenter.loadRemoteTags();
+        }
     }
 
     @Override
     public void onDestroy() {
 
-        presenter.onDetachView(this);
+        mPresenter.onDetachView(this);
 
         super.onDestroy();
     }
@@ -78,14 +83,18 @@ public class ImageTagsFragment extends BaseFragment implements ImageTagsContract
             , @Nullable Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.tags_list, null);
 
-        RecyclerView recyclerView = (RecyclerView)view.findViewById(R.id.tags_recycler_view);
+        mSwipeRefreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.tags_list_swipe_refresh_layout);
+        mSwipeRefreshLayout.setOnRefreshListener(this);
+        mSwipeRefreshLayout.setColorSchemeResources(R.color.colorGray, R.color.colorAccent, R.color.colorGreen);
+
+        RecyclerView recyclerView = (RecyclerView) view.findViewById(R.id.tags_recycler_view);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        recyclerView.setAdapter(imageTagsAdapter);
+        recyclerView.setAdapter(mImageTagsAdapter);
         recyclerView.addOnItemTouchListener(new OnRecyclerViewItemClickListener(recyclerView) {
             @Override
             public void onItemClick(RecyclerView.ViewHolder viewHolder) {
                 int position = viewHolder.getLayoutPosition();
-                Tag tag = imageTagsAdapter.getItem(position);
+                Tag tag = mImageTagsAdapter.getItem(position);
                 pushFragment(ImageAlbumsFragment.newInstance(tag.getId(), tag.getTitle()));
             }
         });
@@ -107,24 +116,37 @@ public class ImageTagsFragment extends BaseFragment implements ImageTagsContract
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void screenSizeChanged(ScreenSizeChangeEvent event) {
 
-        imageTagsAdapter.relayout(event.getWidth());
+        mImageTagsAdapter.relayout(event.getWidth());
 
     }
 
     @Override
-    public void tagsDataChanged(List<Tag> imageTags) {
-        if (null != imageTags) {
-            imageTagsAdapter.reset(imageTags);
+    public void onRefresh() {
+        if (!mLoading.get()) {
+            mLoading.set(true);
+            mPresenter.loadRemoteTags();
         }
     }
 
     @Override
-    public void tagsLoadError(Throwable throwable) {
+    public void rendererTags(List<Tag> tags) {
+        if (tags != null) {
+            mImageTagsAdapter.reset(tags);
+        }
+    }
+
+    @Override
+    public void finishRefreshing() {
+        mLoading.set(false);
+        mSwipeRefreshLayout.setRefreshing(false);
+    }
+
+    @Override
+    public void showTagsLoadError(Throwable throwable) {
         Context context = getActivity();
         if (context != null) {
             Toast.makeText(getActivity(), "Oops!载入数据失败", Toast.LENGTH_LONG).show();
         }
-
     }
 
 
