@@ -10,10 +10,12 @@ import com.cherry.stunner.model.domain.Album;
 import com.cherry.stunner.model.domain.AlbumList;
 import com.cherry.stunner.model.domain.ResponseData;
 import com.cherry.stunner.model.service.AlbumService;
+import com.cherry.stunner.view.utils.ListUtils;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;

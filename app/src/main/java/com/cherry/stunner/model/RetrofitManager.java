@@ -20,9 +20,9 @@ public enum  RetrofitManager {
 
     RetrofitManager() {
         OkHttpClient okHttpClient = new OkHttpClient.Builder()
-                .connectTimeout(1, TimeUnit.SECONDS)
-                .readTimeout(2, TimeUnit.MINUTES)
-                .writeTimeout(1, TimeUnit.SECONDS)
+                .connectTimeout(3, TimeUnit.SECONDS)
+                .readTimeout(3, TimeUnit.MINUTES)
+                .writeTimeout(3, TimeUnit.SECONDS)
                 .build();
         Gson gson = new GsonBuilder()
                 .serializeNulls()

@@ -12,7 +12,7 @@ public interface AlbumService {
 
     @GET("/stunner/api/tag/{tagId}/albums")
     Observable<ResponseData<AlbumList>> listAlbums(@Path("tagId") long tagId
-            , @Query(value = "nextTimeOffset") Long nextTimeOffset
+            , @Query(value = "timeOffset") Long timeOffset
             , @Query("limit") int limit);
 
 }
