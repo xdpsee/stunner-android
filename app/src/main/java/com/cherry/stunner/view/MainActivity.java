@@ -8,6 +8,7 @@ import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.cherry.stunner.R;
 import com.cherry.stunner.event.ScreenSizeChangeEvent;
@@ -26,9 +27,9 @@ public class MainActivity extends AppCompatActivity implements BaseFragment.Frag
 
     private BottomNavigationView navigationView;
 
-    private final int INDEX_IMAGE = FragNavController.TAB1;
-    private final int INDEX_GIFS = FragNavController.TAB2;
-    private final int INDEX_VIDEO = FragNavController.TAB3;
+    private final int INDEX_GIFS = FragNavController.TAB1;
+    private final int INDEX_VIDEO = FragNavController.TAB2;
+    private final int INDEX_IMAGE = FragNavController.TAB3;
     private final int INDEX_MY = FragNavController.TAB4;
 
     private FragNavController mNavController;
@@ -118,12 +119,19 @@ public class MainActivity extends AppCompatActivity implements BaseFragment.Frag
 
     }
 
+    private Long mLastPressBackTime = 0L;
+
     @Override
     public void onBackPressed() {
         if (!mNavController.isRootFragment()) {
             mNavController.popFragment();
         } else {
-            super.onBackPressed();
+            if (System.currentTimeMillis() - mLastPressBackTime > 1500) {
+                Toast.makeText(this, "再按一次退出", Toast.LENGTH_SHORT).show();
+                mLastPressBackTime = System.currentTimeMillis();
+            }  else {
+                super.onBackPressed();
+            }
         }
     }
 
@@ -134,7 +142,6 @@ public class MainActivity extends AppCompatActivity implements BaseFragment.Frag
             mNavController.onSaveInstanceState(outState);
         }
     }
-
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
@@ -157,3 +164,6 @@ public class MainActivity extends AppCompatActivity implements BaseFragment.Frag
 
     }
 }
+
+
+

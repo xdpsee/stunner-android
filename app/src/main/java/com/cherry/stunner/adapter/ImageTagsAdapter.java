@@ -7,22 +7,17 @@ import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.ImageView;
-import android.widget.ListAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.cherry.stunner.R;
-import com.cherry.stunner.contract.ImagePortalContract;
-import com.cherry.stunner.model.domain.Album;
 import com.cherry.stunner.model.domain.Tag;
 import com.facebook.drawee.backends.pipeline.Fresco;
 import com.facebook.drawee.interfaces.DraweeController;
 import com.facebook.drawee.view.SimpleDraweeView;
 import com.facebook.imagepipeline.request.ImageRequest;
 import com.facebook.imagepipeline.request.ImageRequestBuilder;
-import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -75,12 +70,9 @@ public class ImageTagsAdapter extends RecyclerView.Adapter<ImageTagsAdapter.Imag
         }
 
         holder.textView.setText(tag.getTitle());
-        holder.overflowImageView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Toast.makeText(holder.itemView.getContext(), "haha", Toast.LENGTH_LONG).show();
-            }
-        });
+        holder.overflowImageView.setOnClickListener((v) ->
+                Toast.makeText(holder.itemView.getContext(), "haha", Toast.LENGTH_LONG).show()
+        );
         holder.resetPreviewAlbums(tag.getAlbums());
     }
 
@@ -136,13 +128,10 @@ public class ImageTagsAdapter extends RecyclerView.Adapter<ImageTagsAdapter.Imag
                 album.setCoverHeight(300);
             }
 
-            int width = screenWidth / 3;
-            holder.itemView.getLayoutParams().height = width;//width * album.getCoverHeight() / album.getCoverWidth();
+            holder.itemView.getLayoutParams().height = screenWidth / 3;
 
             Uri uri = Uri.parse(album.getCoverUrl());
-            ImageRequest request = ImageRequestBuilder.newBuilderWithSource(uri)
-                    .setProgressiveRenderingEnabled(true)
-                    .build();
+            ImageRequest request = ImageRequestBuilder.newBuilderWithSource(uri).build();
             DraweeController controller = Fresco.newDraweeControllerBuilder()
                     .setUri(uri)
                     .setImageRequest(request)
@@ -153,7 +142,6 @@ public class ImageTagsAdapter extends RecyclerView.Adapter<ImageTagsAdapter.Imag
             holder.mPreviewImageView.setController(controller);
 
 
-
         }
 
         @Override
@@ -162,10 +150,14 @@ public class ImageTagsAdapter extends RecyclerView.Adapter<ImageTagsAdapter.Imag
         }
 
         void reset(List<Tag.AlbumBrief> albumBriefs) {
+
+            final int originCount = mAlbumBriefs.size();
+
             this.mAlbumBriefs.clear();
             this.mAlbumBriefs.addAll(albumBriefs);
 
-            notifyDataSetChanged();
+            notifyItemRangeRemoved(0, originCount);
+            notifyItemRangeInserted(0, albumBriefs.size());
         }
 
         class PreviewAlbumImageViewHolder extends RecyclerView.ViewHolder {
@@ -180,3 +172,8 @@ public class ImageTagsAdapter extends RecyclerView.Adapter<ImageTagsAdapter.Imag
         }
     }
 }
+
+
+
+
+

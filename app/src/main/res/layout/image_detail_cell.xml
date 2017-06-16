@@ -1,20 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:fresco="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:layout_margin="1dp"
-    android:orientation="vertical">
+    android:layout_height="match_parent">
 
     <com.facebook.drawee.view.SimpleDraweeView
-        android:id="@+id/tags_cell_preview_cell_image_view"
+        android:id="@+id/image_detail_cell_image_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        fresco:actualImageScaleType="focusCrop"
+        fresco:actualImageScaleType="fitCenter"
         fresco:failureImage="@android:drawable/ic_menu_report_image"
         fresco:failureImageScaleType="centerInside"
         fresco:placeholderImage="@drawable/ic_image_loading"
         fresco:placeholderImageScaleType="centerInside"
         fresco:retryImage="@android:drawable/ic_menu_report_image"
         fresco:retryImageScaleType="centerInside" />
+
 </LinearLayout>
+

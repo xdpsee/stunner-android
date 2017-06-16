@@ -29,7 +29,7 @@ public class NavMyFragment extends BaseFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
 
-        View view = inflater.inflate(R.layout.tags_list, null);
+        View view = inflater.inflate(R.layout.portal_my, null);
 
         return view;
     }

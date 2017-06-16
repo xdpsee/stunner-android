@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:fresco="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -8,12 +9,17 @@
     android:clickable="true"
     android:layout_margin="1dp">
 
-    <android.support.v7.widget.AppCompatImageView
+    <com.facebook.drawee.view.SimpleDraweeView
         android:id="@+id/albums_cell_image_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:clickable="false"
-        android:scaleType="fitCenter" />
+        fresco:actualImageScaleType="fitCenter"
+        fresco:failureImage="@android:drawable/ic_menu_report_image"
+        fresco:failureImageScaleType="centerInside"
+        fresco:placeholderImage="@drawable/ic_image_loading"
+        fresco:placeholderImageScaleType="centerInside"
+        fresco:retryImage="@android:drawable/ic_menu_report_image"
+        fresco:retryImageScaleType="centerInside" />
 
     <android.support.v7.widget.AppCompatTextView
         android:id="@+id/albums_cell_text_view"

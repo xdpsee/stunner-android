@@ -3,6 +3,7 @@ package com.cherry.stunner.view.view.recyclerview;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
+import android.util.Log;
 import android.view.View;
 
 /**
@@ -60,7 +61,7 @@ public class ExStaggeredGridLayoutManager extends StaggeredGridLayoutManager {
                     }
                     // recycler.recycleView(view);
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    Log.w(TAG, e.getMessage());
                 }
             }
         }

@@ -1,15 +1,15 @@
 package com.cherry.stunner.view.fragment;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Point;
 import android.os.Bundle;
-import android.os.SystemClock;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,7 +22,6 @@ import com.cherry.stunner.event.ScreenSizeChangeEvent;
 import com.cherry.stunner.model.domain.Album;
 import com.cherry.stunner.presenter.ImageAlbumsPresenter;
 import com.cherry.stunner.view.event.OnRecyclerViewItemClickListener;
-import com.cherry.stunner.view.utils.ArrayUtils;
 import com.cherry.stunner.view.utils.ScreenSize;
 import com.cherry.stunner.view.view.recyclerview.EndlessRecyclerOnScrollListener;
 import com.cherry.stunner.view.view.recyclerview.ExStaggeredGridLayoutManager;
@@ -36,14 +35,15 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
-import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.IntStream;
+
+import static android.support.v7.widget.RecyclerView.SCROLL_STATE_IDLE;
 
 public class ImageAlbumsFragment extends BaseFragment implements ImageAlbumsContract.View, SwipeRefreshLayout.OnRefreshListener {
 
-    public static final String ARG_TAG_ID = "ARG_TAG_ID";
+    public static final String ARG_TAG_ID = "ARG_ALBUM_ID";
     public static final String ARG_TITLE = "ARG_TITLE";
 
     public static final int SPAN_COUNT = 3;
@@ -52,7 +52,7 @@ public class ImageAlbumsFragment extends BaseFragment implements ImageAlbumsCont
 
     private String mTitle;
 
-    private HeaderAndFooterRecyclerViewAdapter mFooterRecyclerViewAdapter = null;
+    private HeaderAndFooterRecyclerViewAdapter mRecyclerViewAdapterWrapper = null;
 
     private ImageAlbumsAdapter mImageAlbumsAdapter;
 
@@ -62,11 +62,13 @@ public class ImageAlbumsFragment extends BaseFragment implements ImageAlbumsCont
 
     private RecyclerView mRecyclerView;
 
-    private ExStaggeredGridLayoutManager mStaggeredGridLayoutManager;
-
     private AtomicBoolean mLoading  = new AtomicBoolean(false);
 
     private AtomicBoolean mMoreLoading = new AtomicBoolean(false);
+
+    private int mLastPosition;
+
+    private int mLastOffset;
 
     public static ImageAlbumsFragment newInstance(long tagId, String title) {
         Bundle args = new Bundle();
@@ -90,13 +92,14 @@ public class ImageAlbumsFragment extends BaseFragment implements ImageAlbumsCont
 
         List<Album> albums = mPresenter.loadLocalAlbums();
         mImageAlbumsAdapter = new ImageAlbumsAdapter(albums, size.x);
-        mFooterRecyclerViewAdapter = new HeaderAndFooterRecyclerViewAdapter(mImageAlbumsAdapter);
-        mStaggeredGridLayoutManager = new ExStaggeredGridLayoutManager(SPAN_COUNT, StaggeredGridLayoutManager.VERTICAL);
-        mStaggeredGridLayoutManager.setSpanSizeLookup(new HeaderSpanSizeLookup(mFooterRecyclerViewAdapter, SPAN_COUNT));
-
+        mRecyclerViewAdapterWrapper = new HeaderAndFooterRecyclerViewAdapter(mImageAlbumsAdapter);
         if (albums.isEmpty()) {
             mPresenter.loadRemoteAlbums();
         }
+
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+        mLastOffset = preferences.getInt(String.format(Locale.CHINA, "%d-albums-last-offset", mTagId), 0);
+        mLastPosition = preferences.getInt(String.format(Locale.CHINA, "%d-albums-last-position", mTagId), 0);
     }
 
     @Override
@@ -123,16 +126,25 @@ public class ImageAlbumsFragment extends BaseFragment implements ImageAlbumsCont
         mSwipeRefreshLayout.setColorSchemeResources(R.color.colorGray, R.color.colorAccent, R.color.colorGreen);
         mSwipeRefreshLayout.setOnRefreshListener(this);
 
+        ExStaggeredGridLayoutManager layoutManager = new ExStaggeredGridLayoutManager(SPAN_COUNT, StaggeredGridLayoutManager.VERTICAL);
+        layoutManager.setSpanSizeLookup(new HeaderSpanSizeLookup(mRecyclerViewAdapterWrapper, SPAN_COUNT));
+
         mRecyclerView = (RecyclerView)view.findViewById(R.id.albums_recycler_view);
-        mRecyclerView.setLayoutManager(mStaggeredGridLayoutManager);
-        mRecyclerView.setAdapter(mFooterRecyclerViewAdapter);
+        mRecyclerView.setLayoutManager(layoutManager);
+        mRecyclerView.setAdapter(mRecyclerViewAdapterWrapper);
         RecyclerViewUtils.setFooterView(mRecyclerView, new LoadingFooter(getContext()));
         mRecyclerView.addOnScrollListener(mOnScrollListener);
+        if (mImageAlbumsAdapter.getItemCount() > 0 && mLastOffset != 0 && mLastPosition != 0) {
+            layoutManager.scrollToPositionWithOffset(mLastPosition, mLastOffset);
+        }
+
         mRecyclerView.addOnItemTouchListener(new OnRecyclerViewItemClickListener(mRecyclerView) {
             @Override
             public void onItemClick(RecyclerView.ViewHolder viewHolder) {
                 int position = viewHolder.getLayoutPosition();
                 Album album = mImageAlbumsAdapter.getItem(position);
+
+                pushFragment(ImageDetailFragment.newInstance(album.getId(), album.getTitle()));
             }
         });
 
@@ -144,8 +156,15 @@ public class ImageAlbumsFragment extends BaseFragment implements ImageAlbumsCont
     @Override
     public void onDestroyView() {
 
+        mSwipeRefreshLayout.setOnRefreshListener(null);
+        mSwipeRefreshLayout = null;
+        RecyclerViewUtils.removeFooterView(mRecyclerView);
         mRecyclerView = null;
         EventBus.getDefault().unregister(this);
+
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+        preferences.edit().putInt(String.format(Locale.CHINA, "%d-albums-last-offset", mTagId), mLastOffset).apply();
+        preferences.edit().putInt(String.format(Locale.CHINA, "%d-albums-last-position", mTagId), mLastPosition).apply();
 
         super.onDestroyView();
     }
@@ -153,11 +172,22 @@ public class ImageAlbumsFragment extends BaseFragment implements ImageAlbumsCont
     private EndlessRecyclerOnScrollListener mOnScrollListener = new EndlessRecyclerOnScrollListener() {
 
         @Override
+        public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+
+            if (SCROLL_STATE_IDLE == newState) {
+                View view = recyclerView.getChildAt(0);
+                mLastOffset = view.getTop();
+                mLastPosition = recyclerView.getLayoutManager().getPosition(view);
+            }
+
+            super.onScrollStateChanged(recyclerView, newState);
+        }
+
+        @Override
         public void onLoadNextPage(View view) {
 
             LoadingFooter.State state = RecyclerViewStateUtils.getFooterViewState(mRecyclerView);
             if(state == LoadingFooter.State.Loading) {
-                Log.d("", "the state is Loading, just wait..");
                 return;
             }
 
@@ -184,7 +214,7 @@ public class ImageAlbumsFragment extends BaseFragment implements ImageAlbumsCont
 
     @Override
     public void rendererAlbums(List<Album> albums, boolean append) {
-        if (albums != null) {
+        if (albums != null && mRecyclerView != null) {
             if (!append) {
                 mImageAlbumsAdapter.reset(albums);
             } else {
@@ -196,7 +226,9 @@ public class ImageAlbumsFragment extends BaseFragment implements ImageAlbumsCont
     @Override
     public void finishPullToRefreshing() {
         mLoading.set(false);
-        mSwipeRefreshLayout.setRefreshing(false);
+        if (mSwipeRefreshLayout != null) {
+            mSwipeRefreshLayout.setRefreshing(false);
+        }
     }
 
     @Override

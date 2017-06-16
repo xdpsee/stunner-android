@@ -1,9 +1,10 @@
 package com.cherry.stunner.view.fragment.portal;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
-import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -57,7 +58,7 @@ public class NavImageFragment extends BaseFragment implements ImagePortalContrac
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
 
-        View view = inflater.inflate(R.layout.image_portal, null);
+        View view = inflater.inflate(R.layout.portal_image, null);
 
         viewPager = (ViewPager) view.findViewById(R.id.view_pager);
         pagerAdapter = new TagsFragmentPagerAdapter(getChildFragmentManager(), presenter.getCategories());
@@ -73,21 +74,17 @@ public class NavImageFragment extends BaseFragment implements ImagePortalContrac
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        if (savedInstanceState != null) {
-            int currentItem = savedInstanceState.getInt("current-item");
-            viewPager.setCurrentItem(currentItem);
-        }
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+        int curr = preferences.getInt("portal-current-item", 0);
+        viewPager.setCurrentItem(curr);
     }
 
     @Override
-    public void onSaveInstanceState(Bundle outState) {
+    public void onDestroyView() {
+        super.onDestroyView();
 
-        if (viewPager != null) {
-            int currentItem = viewPager.getCurrentItem();
-            outState.putInt("current-item", currentItem);
-        }
-
-        super.onSaveInstanceState(outState);
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+        preferences.edit().putInt("portal-current-item", viewPager.getCurrentItem()).apply();
     }
 
     @Override
@@ -100,5 +97,9 @@ public class NavImageFragment extends BaseFragment implements ImagePortalContrac
         Toast.makeText(getContext(), "Oops!载入数据失败", Toast.LENGTH_LONG).show();
     }
 }
+
+
+
+
 
 

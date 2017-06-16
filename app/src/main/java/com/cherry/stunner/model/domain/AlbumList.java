@@ -1,15 +1,15 @@
 package com.cherry.stunner.model.domain;
 
+import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.List;
 
 import lombok.Data;
 
 @Data
-public class AlbumList {
+public class AlbumList implements Serializable {
 
     private Long nextTimeOffset;
 
-    private List<Album> albums = new ArrayList<>();
+    private ArrayList<Album> albums = new ArrayList<>();
 
 }

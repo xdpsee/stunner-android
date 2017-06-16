@@ -28,8 +28,10 @@ public class NavVideoFragment extends BaseFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
 
-        View view = inflater.inflate(R.layout.tags_list, null);
+        View view = inflater.inflate(R.layout.portal_video, null);
 
         return view;
     }
 }
+
+
